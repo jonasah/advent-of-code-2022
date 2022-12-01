@@ -1,6 +1,6 @@
 const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
-const fs = require('fs');
+const getInput = require('./get-input');
 
 const { argv } = yargs(hideBin(process.argv)).option('day', {
   type: 'number',
@@ -9,7 +9,7 @@ const { argv } = yargs(hideBin(process.argv)).option('day', {
 
 const { day } = argv;
 const { doPart1, doPart2 } = require(`./day${day}/day${day}.js`);
-const input = fs.readFileSync(`src/day${day}/input.txt`, 'utf-8');
+const input = getInput(day);
 
 const result1 = doPart1(input);
 const result2 = doPart2(input);
