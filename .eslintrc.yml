@@ -3,7 +3,9 @@ env:
   browser: true
   es2021: true
   jest: true
-extends: airbnb-base
+extends:
+  - airbnb-base
+  - plugin:prettier/recommended
 overrides: []
 parserOptions:
   ecmaVersion: latest
