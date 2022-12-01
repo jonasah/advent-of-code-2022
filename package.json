@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/main.js",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint --cache ."
   },
   "devDependencies": {
     "eslint": "^7.32.0 || ^8.2.0",
