@@ -1,12 +1,8 @@
 const { sum } = require('lodash');
+const getLines = require('../get-lines');
 
 const getCalorieCounts = (input) => {
-  const lines = input
-    .trim()
-    .split('\n')
-    .map((l) => l.trim());
-
-  return lines
+  return getLines(input)
     .reduce(
       (acc, curr) => {
         if (curr === '') {
