@@ -15,6 +15,6 @@ describe('day2', () => {
 
   test('part 2', () => {
     expect(doPart2(testInput)).toBe(12);
-    expect(doPart2(realInput)).toBe(false);
+    expect(doPart2(realInput)).toBe(16862);
   });
 });
