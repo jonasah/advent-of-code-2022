@@ -1,24 +1,44 @@
 const getLines = require('../get-lines');
 
-const regex = /^move (\d+) from (\d+) to (\d+)$/;
+const rearrangementRegex = /^move (\d+) from (\d+) to (\d+)$/;
 
-const parseInstructions = (input) => {
-  const lines = getLines(input);
-  const emptyLineIndex = lines.findIndex((l) => l === '');
-  const instructionLines = lines.slice(emptyLineIndex + 1);
+const parseStacks = (stacksLines, stacksLegend) => {
+  const stacks = stacksLegend
+    .split('')
+    .filter((n) => n.trim() !== '')
+    .map(() => []);
 
-  return instructionLines.map((l) => {
-    const matches = regex.exec(l);
-    return matches.slice(1, 4);
+  stacksLines.forEach((l) => {
+    for (let stack = 0; stack < stacks.length; ++stack) {
+      const i = 1 + 4 * stack;
+
+      if (l[i] && l[i] !== ' ') {
+        stacks[stack].unshift(l[i]);
+      }
+    }
   });
+
+  return stacks;
 };
 
-const doPart1 = (input, startStacks) => {
-  const instructions = parseInstructions(input);
+const parseRearrangement = (rearrangementLines) => {
+  return rearrangementLines.map((l) => rearrangementRegex.exec(l).slice(1, 4));
+};
 
-  const stacks = startStacks.map((s) => [...s]);
+const parseInput = (input) => {
+  const lines = getLines(input, { trimStart: false });
+  const emptyLineIndex = lines.findIndex((l) => l === '');
+  const stacksLines = lines.slice(0, emptyLineIndex - 1);
+  const stacksLegend = lines[emptyLineIndex - 1];
+  const rearrangementLines = lines.slice(emptyLineIndex + 1);
 
-  instructions.forEach(([num, from, to]) => {
+  return [parseStacks(stacksLines, stacksLegend), parseRearrangement(rearrangementLines)];
+};
+
+const doPart1 = (input) => {
+  const [stacks, rearrangements] = parseInput(input);
+
+  rearrangements.forEach(([num, from, to]) => {
     for (let i = 0; i < num; ++i) {
       stacks[to - 1].push(stacks[from - 1].pop());
     }
@@ -27,12 +47,10 @@ const doPart1 = (input, startStacks) => {
   return stacks.map((s) => s[s.length - 1]).join('');
 };
 
-const doPart2 = (input, startStacks) => {
-  const instructions = parseInstructions(input);
+const doPart2 = (input) => {
+  const [stacks, rearrangements] = parseInput(input);
 
-  const stacks = startStacks.map((s) => [...s]);
-
-  instructions.forEach(([num, from, to]) => {
+  rearrangements.forEach(([num, from, to]) => {
     const cratesToMove = [];
     for (let i = 0; i < num; ++i) {
       cratesToMove.push(stacks[from - 1].pop());
