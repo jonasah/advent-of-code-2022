@@ -14,3 +14,6 @@ rules:
   no-console: off
   import/extensions: off
   import/no-dynamic-require: off
+  no-plusplus:
+    - error
+    - allowForLoopAfterthoughts: true
