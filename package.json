@@ -22,6 +22,7 @@
   "dependencies": {
     "graphology": "^0.25.1",
     "graphology-shortest-path": "^2.0.1",
+    "js-combinatorics": "^2.1.1",
     "lodash": "^4.17.21",
     "yargs": "^17.6.2"
   }

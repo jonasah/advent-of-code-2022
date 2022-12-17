@@ -1,5 +1,6 @@
 const Graph = require('graphology');
 const { singleSourceLength } = require('graphology-shortest-path');
+const { Combination } = require('js-combinatorics');
 const getLines = require('../get-lines');
 
 const inputRegex = /^Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.+)$/;
@@ -29,13 +30,11 @@ const findMaxFlow = (graph, maxTime, t, currentValve, openValves) => {
   const timeLeft = maxTime - t;
   const shortestPaths = singleSourceLength(graph, currentValve);
   const possibleDestinations = Object.entries(shortestPaths)
-    .filter(([valve]) => !openValves.includes(valve))
     .map(([valve, d]) => {
       const flowRate = graph.getNodeAttribute(valve, 'flowRate');
       return [valve, (timeLeft - d) * flowRate, d];
     })
-    .filter(([, f]) => f > 0)
-    .sort(([, f1], [, f2]) => f2 - f1);
+    .filter(([valve, flow]) => flow > 0 && !openValves.includes(valve));
 
   if (possibleDestinations.length === 0) {
     return 0;
@@ -53,7 +52,25 @@ const doPart1 = (input) => {
   return findMaxFlow(buildGraph(input), 30, 1, 'AA', []);
 };
 
-const doPart2 = (input) => {};
+const doPart2 = (input) => {
+  const graph = buildGraph(input);
+
+  const valvesToOpen = graph.filterNodes((_, { flowRate }) => flowRate > 0);
+
+  const combinations = [
+    ...new Combination(valvesToOpen, Math.floor(valvesToOpen.length / 2)),
+  ];
+
+  return Math.max(
+    ...combinations.map((valves) => {
+      const otherValves = valvesToOpen.filter((v) => !valves.includes(v));
+      return (
+        findMaxFlow(graph, 26, 1, 'AA', valves) +
+        findMaxFlow(graph, 26, 1, 'AA', otherValves)
+      );
+    })
+  );
+};
 
 module.exports = {
   doPart1,

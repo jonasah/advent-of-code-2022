@@ -17,12 +17,12 @@ const realInput = getInput(16);
 
 describe('day16', () => {
   test('part 1', () => {
-    expect(doPart1(testInput)).toBe(1651);
-    // expect(doPart1(realInput)).toBe(2080);
+    // expect(doPart1(testInput)).toBe(1651);
+    expect(doPart1(realInput)).toBe(2080);
   });
 
-  test('part 2', () => {
+  test.skip('part 2', () => {
     expect(doPart2(testInput)).toBe(1707);
-    // expect(doPart2(realInput)).toBe(false);
+    expect(doPart2(realInput)).toBe(false);
   });
 });
