@@ -118,6 +118,68 @@ const getFaceForPosition = (faces, pos) => {
   );
 };
 
+const wrap = (dir, pos, face, faces) => {
+  const [faceNo, ul, dr, links] = face;
+  const [nextFaceNo, connectingSide] = links[dir];
+  const nextFace = getFace(faces, nextFaceNo);
+
+  if (!nextFace) {
+    throw new Error(`failed to find next ${nextFaceNo}`);
+  }
+
+  const [, nextUL, nextDR] = nextFace;
+
+  if (dir === RIGHT) {
+    if (connectingSide === RIGHT || connectingSide === DOWN) {
+      throw new Error(
+        `1 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+      );
+    }
+
+    if (connectingSide === UP) {
+      return [DOWN, [nextUL[0] + (dr[1] - pos[1]), nextUL[1]]];
+    }
+
+    return [RIGHT, [nextUL[0], pos[1]]];
+  }
+
+  if (dir === DOWN) {
+    if (connectingSide === LEFT || connectingSide === RIGHT) {
+      throw new Error(
+        `2 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+      );
+    }
+
+    if (connectingSide === DOWN) {
+      return [UP, [nextUL[0] + dr[0] - pos[0], nextDR[1]]];
+    }
+
+    return [DOWN, [pos[0], nextUL[1]]];
+  }
+
+  if (dir === LEFT) {
+    if (connectingSide === LEFT || connectingSide === DOWN || connectingSide === UP) {
+      throw new Error(
+        `3 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+      );
+    }
+
+    return [LEFT, [nextDR[0], pos[1]]];
+  }
+
+  if (connectingSide === UP || connectingSide === RIGHT) {
+    throw new Error(
+      `4 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+    );
+  }
+
+  if (connectingSide === LEFT) {
+    return [RIGHT, [nextUL[0], nextUL[1] + pos[0] - ul[0]]];
+  }
+
+  return [UP, [pos[0], nextDR[1]]];
+};
+
 const findPassword = (input, faces) => {
   const [map, path] = parseInput(input);
 
@@ -157,74 +219,15 @@ const findPassword = (input, faces) => {
       }
 
       if (stepsLeft > 0) {
-        const [faceNo, , , links] = face;
-        const [nextFaceNo, connectingSide] = links[dir];
-        const nextFace = getFace(faces, nextFaceNo);
-
-        if (!nextFace) {
-          throw new Error(`failed to find next ${nextFaceNo}`);
-        }
-
-        const [wrappedDir, wrappedPos] = ((d, p) => {
-          const [, nextUL, nextDR] = nextFace;
-
-          if (d === RIGHT) {
-            if (connectingSide === RIGHT || connectingSide === DOWN) {
-              throw new Error(
-                `1 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
-              );
-            }
-
-            if (connectingSide === UP) {
-              return [DOWN, [nextUL[0] + (dr[1] - p[1]), nextUL[1]]];
-            }
-
-            return [RIGHT, [nextUL[0], p[1]]];
-          }
-          if (d === DOWN) {
-            if (connectingSide === LEFT || connectingSide === RIGHT) {
-              throw new Error(
-                `2 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
-              );
-            }
-
-            if (connectingSide === DOWN) {
-              return [UP, [nextUL[0] + dr[0] - p[0], nextDR[1]]];
-            }
-
-            return [DOWN, [p[0], nextUL[1]]];
-          }
-          if (d === LEFT) {
-            if (
-              connectingSide === LEFT ||
-              connectingSide === DOWN ||
-              connectingSide === UP
-            ) {
-              throw new Error(
-                `3 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
-              );
-            }
-
-            return [LEFT, [nextDR[0], p[1]]];
-          }
-
-          if (connectingSide === UP || connectingSide === RIGHT) {
-            throw new Error(
-              `4 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
-            );
-          }
-
-          if (connectingSide === LEFT) {
-            return [RIGHT, [nextUL[0], nextUL[1] + p[0] - ul[0]]];
-          }
-
-          return [UP, [p[0], nextDR[1]]];
-        })(dir, pos);
+        const [wrappedDir, wrappedPos] = wrap(dir, pos, face, faces);
 
         if (!isWall(map, wrappedPos)) {
           dir = wrappedDir;
           pos = wrappedPos;
-          path.unshift(stepsLeft - 1);
+
+          if (stepsLeft > 1) {
+            path.unshift(stepsLeft - 1);
+          }
         }
       }
 
