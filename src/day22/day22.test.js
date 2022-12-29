@@ -142,7 +142,76 @@ describe('day22', () => {
   });
 
   test('part 2', () => {
-    // expect(doPart2(testInput, 4)).toBe(5031);
+    expect(
+      doPart2(testInput, [
+        [
+          1,
+          [8, 0],
+          [11, 3],
+          {
+            [RIGHT]: [6, RIGHT],
+            [DOWN]: [4, UP],
+            [LEFT]: [3, UP],
+            [UP]: [2, UP],
+          },
+        ],
+        [
+          2,
+          [0, 4],
+          [3, 7],
+          {
+            [RIGHT]: [3, LEFT],
+            [DOWN]: [5, DOWN],
+            [LEFT]: [6, DOWN],
+            [UP]: [1, UP],
+          },
+        ],
+        [
+          3,
+          [4, 4],
+          [7, 7],
+          {
+            [RIGHT]: [4, LEFT],
+            [DOWN]: [5, LEFT],
+            [LEFT]: [2, RIGHT],
+            [UP]: [1, LEFT],
+          },
+        ],
+        [
+          4,
+          [8, 4],
+          [11, 7],
+          {
+            [RIGHT]: [6, UP],
+            [DOWN]: [5, UP],
+            [LEFT]: [3, RIGHT],
+            [UP]: [1, DOWN],
+          },
+        ],
+        [
+          5,
+          [8, 8],
+          [11, 11],
+          {
+            [RIGHT]: [6, LEFT],
+            [DOWN]: [2, DOWN],
+            [LEFT]: [3, DOWN],
+            [UP]: [4, DOWN],
+          },
+        ],
+        [
+          6,
+          [12, 8],
+          [15, 11],
+          {
+            [RIGHT]: [1, RIGHT],
+            [DOWN]: [2, LEFT],
+            [LEFT]: [5, RIGHT],
+            [UP]: [4, RIGHT],
+          },
+        ],
+      ])
+    ).toBe(5031);
     // expect(doPart2(realInput, 50)).toBe(false);
   });
 });

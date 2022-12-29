@@ -107,15 +107,15 @@ const moveUp = (map, pos, steps, edgePosition) => {
 const rotateLeft = (dir) => (dir === RIGHT ? UP : dir - 1);
 const rotateRight = (dir) => (dir === UP ? RIGHT : dir + 1);
 
+const getFace = (faces, face) => {
+  return faces.find(([n]) => n === face);
+};
+
 const getFaceForPosition = (faces, pos) => {
   return faces.find(
     ([, ul, dr]) =>
       ul[0] <= pos[0] && pos[0] <= dr[0] && ul[1] <= pos[1] && pos[1] <= dr[1]
   );
-};
-
-const getFace = (faces, face) => {
-  return faces.find(([n]) => n === face);
 };
 
 const findPassword = (input, faces) => {
@@ -157,31 +157,72 @@ const findPassword = (input, faces) => {
       }
 
       if (stepsLeft > 0) {
-        const [, , , links] = face;
-        const [nextFaceNo, nextFaceDir] = links[dir];
+        const [faceNo, , , links] = face;
+        const [nextFaceNo, connectingSide] = links[dir];
         const nextFace = getFace(faces, nextFaceNo);
 
         if (!nextFace) {
           throw new Error(`failed to find next ${nextFaceNo}`);
         }
 
-        const wrappedPos = ((d, p) => {
+        const [wrappedDir, wrappedPos] = ((d, p) => {
           const [, nextUL, nextDR] = nextFace;
 
           if (d === RIGHT) {
-            return [nextUL[0], p[1]];
+            if (connectingSide === RIGHT || connectingSide === DOWN) {
+              throw new Error(
+                `1 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+              );
+            }
+
+            if (connectingSide === UP) {
+              return [DOWN, [nextUL[0] + (dr[1] - p[1]), nextUL[1]]];
+            }
+
+            return [RIGHT, [nextUL[0], p[1]]];
           }
           if (d === DOWN) {
-            return [p[0], nextUL[1]];
+            if (connectingSide === LEFT || connectingSide === RIGHT) {
+              throw new Error(
+                `2 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+              );
+            }
+
+            if (connectingSide === DOWN) {
+              return [UP, [nextUL[0] + dr[0] - p[0], nextDR[1]]];
+            }
+
+            return [DOWN, [p[0], nextUL[1]]];
           }
           if (d === LEFT) {
-            return [nextDR[0], p[1]];
+            if (
+              connectingSide === LEFT ||
+              connectingSide === DOWN ||
+              connectingSide === UP
+            ) {
+              throw new Error(
+                `3 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+              );
+            }
+
+            return [LEFT, [nextDR[0], p[1]]];
           }
 
-          return [p[0], nextDR[1]];
+          if (connectingSide === UP || connectingSide === RIGHT) {
+            throw new Error(
+              `4 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
+            );
+          }
+
+          if (connectingSide === LEFT) {
+            return [RIGHT, [nextUL[0], nextUL[1] + p[0] - ul[0]]];
+          }
+
+          return [UP, [p[0], nextDR[1]]];
         })(dir, pos);
 
         if (!isWall(map, wrappedPos)) {
+          dir = wrappedDir;
           pos = wrappedPos;
           path.unshift(stepsLeft - 1);
         }
@@ -194,7 +235,7 @@ const findPassword = (input, faces) => {
       throw new Error(`nan ${hist.slice(-2, -1)} ${pos} ${action} ${dir}`);
     }
 
-    if (n === 4) {
+    if (n === 17) {
       // break;
     }
   }
