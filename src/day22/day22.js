@@ -36,23 +36,14 @@ const findLeftMostPosition = (rowOrColumn) => {
   return rowOrColumn.findIndex((tile) => tile !== EMPTY);
 };
 
-const findRightMostPosition = (rowOrColumn) => {
-  return rowOrColumn.findLastIndex((tile) => tile !== EMPTY);
-};
-
 const moveInRowOrColumn = (rowOrColumn, current, steps) => {
-  if (rowOrColumn[current] === WALL) {
-    // wall on edge, wrap back around to right edge
-    return [findRightMostPosition(rowOrColumn), -1];
-  }
-
   // find wall ahead
   const newPosition = current + steps;
   const wallPosition = rowOrColumn.indexOf(WALL, current);
 
   if (wallPosition !== -1 && wallPosition <= newPosition) {
     // move to wall
-    return [wallPosition - 1, -1];
+    return [wallPosition - 1, 0];
   }
 
   // no wall, find edge ahead
@@ -64,26 +55,33 @@ const moveInRowOrColumn = (rowOrColumn, current, steps) => {
 
   if (newPosition < edgePosition) {
     // no edge, move steps without wrapping around
-    return [newPosition, -1];
+    return [newPosition, 0];
+  }
+
+  const leftMostPosition = findLeftMostPosition(rowOrColumn);
+
+  if (rowOrColumn[leftMostPosition] === WALL) {
+    // wall on left edge, stop at right edge
+    return [edgePosition - 1, 0];
   }
 
   // wrap around to left edge
   const stepsLeft = newPosition - edgePosition;
-  return [findLeftMostPosition(rowOrColumn), stepsLeft];
+  return [leftMostPosition, stepsLeft];
 };
 
 const moveRight = (map, pos, steps) => {
   const row = map[pos[1]];
   const [newColumn, stepsLeft] = moveInRowOrColumn(row, pos[0], steps);
   const newPos = [newColumn, pos[1]];
-  return stepsLeft === -1 ? newPos : moveRight(map, newPos, stepsLeft);
+  return [newPos, stepsLeft];
 };
 
 const moveDown = (map, pos, steps) => {
   const column = map.map((row) => row[pos[0]]);
   const [newRow, stepsLeft] = moveInRowOrColumn(column, pos[1], steps);
   const newPos = [pos[0], newRow];
-  return stepsLeft === -1 ? newPos : moveDown(map, newPos, stepsLeft);
+  return [newPos, stepsLeft];
 };
 
 const moveLeft = (map, pos, steps) => {
@@ -91,7 +89,7 @@ const moveLeft = (map, pos, steps) => {
   const maxIndex = reversedRow.length - 1;
   const [newColumn, stepsLeft] = moveInRowOrColumn(reversedRow, maxIndex - pos[0], steps);
   const newPos = [maxIndex - newColumn, pos[1]];
-  return stepsLeft === -1 ? newPos : moveLeft(map, newPos, stepsLeft);
+  return [newPos, stepsLeft];
 };
 
 const moveUp = (map, pos, steps) => {
@@ -99,7 +97,7 @@ const moveUp = (map, pos, steps) => {
   const maxIndex = reversedColumn.length - 1;
   const [newRow, stepsLeft] = moveInRowOrColumn(reversedColumn, maxIndex - pos[1], steps);
   const newPos = [pos[0], maxIndex - newRow];
-  return stepsLeft === -1 ? newPos : moveUp(map, newPos, stepsLeft);
+  return [newPos, stepsLeft];
 };
 
 const rotateLeft = (dir) => (dir === RIGHT ? UP : dir - 1);
@@ -120,15 +118,21 @@ const findPassword = (input) => {
       dir = rotateRight(dir);
     } else {
       const steps = action;
+      let stepsLeft = 0;
 
       if (dir === RIGHT) {
-        pos = moveRight(map, pos, steps);
+        [pos, stepsLeft] = moveRight(map, pos, steps);
       } else if (dir === DOWN) {
-        pos = moveDown(map, pos, steps);
+        [pos, stepsLeft] = moveDown(map, pos, steps);
       } else if (dir === LEFT) {
-        pos = moveLeft(map, pos, steps);
+        [pos, stepsLeft] = moveLeft(map, pos, steps);
       } else {
-        pos = moveUp(map, pos, steps);
+        [pos, stepsLeft] = moveUp(map, pos, steps);
+      }
+
+      if (stepsLeft > 0) {
+        // continue moving in the same direction after wrapping around
+        path.unshift(stepsLeft);
       }
     }
   }
