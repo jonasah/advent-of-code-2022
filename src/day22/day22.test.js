@@ -212,6 +212,75 @@ describe('day22', () => {
         ],
       ])
     ).toBe(5031);
-    // expect(doPart2(realInput, 50)).toBe(false);
+    expect(
+      doPart2(realInput, [
+        [
+          1,
+          [50, 0],
+          [99, 49],
+          {
+            [RIGHT]: [2, LEFT],
+            [DOWN]: [3, UP],
+            [LEFT]: [4, LEFT],
+            [UP]: [6, LEFT],
+          },
+        ],
+        [
+          2,
+          [100, 0],
+          [149, 49],
+          {
+            [RIGHT]: [5, RIGHT],
+            [DOWN]: [3, RIGHT],
+            [LEFT]: [1, RIGHT],
+            [UP]: [6, DOWN],
+          },
+        ],
+        [
+          3,
+          [50, 50],
+          [99, 99],
+          {
+            [RIGHT]: [2, DOWN],
+            [DOWN]: [5, UP],
+            [LEFT]: [4, UP],
+            [UP]: [1, DOWN],
+          },
+        ],
+        [
+          4,
+          [0, 100],
+          [49, 149],
+          {
+            [RIGHT]: [5, LEFT],
+            [DOWN]: [6, UP],
+            [LEFT]: [1, LEFT],
+            [UP]: [3, LEFT],
+          },
+        ],
+        [
+          5,
+          [50, 100],
+          [99, 149],
+          {
+            [RIGHT]: [2, RIGHT],
+            [DOWN]: [6, RIGHT],
+            [LEFT]: [4, RIGHT],
+            [UP]: [3, DOWN],
+          },
+        ],
+        [
+          6,
+          [0, 150],
+          [49, 199],
+          {
+            [RIGHT]: [5, DOWN],
+            [DOWN]: [2, UP],
+            [LEFT]: [1, UP],
+            [UP]: [4, DOWN],
+          },
+        ],
+      ])
+    ).toBe(false);
   });
 });
