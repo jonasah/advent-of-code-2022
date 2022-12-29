@@ -36,10 +36,6 @@ const isWall = (map, pos) => {
   return map[pos[1]][pos[0]] === WALL;
 };
 
-const findLeftMostPosition = (rowOrColumn) => {
-  return rowOrColumn.findIndex((tile) => tile !== EMPTY);
-};
-
 const moveInRowOrColumn = (rowOrColumn, current, steps, edgePosition) => {
   if (edgePosition == null) {
     throw new Error('no edge');
@@ -183,7 +179,7 @@ const wrap = (dir, pos, face, faces) => {
 const findPassword = (input, faces) => {
   const [map, path] = parseInput(input);
 
-  let pos = [findLeftMostPosition(map[0]), 0];
+  let [, pos] = getFace(faces, 1);
   let dir = RIGHT;
 
   let n = 0;
