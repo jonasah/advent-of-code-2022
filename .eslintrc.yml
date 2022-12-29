@@ -25,3 +25,5 @@ rules:
     - props: true
       ignorePropertyModificationsFor:
         - heights
+  no-sparse-arrays:
+    - off
