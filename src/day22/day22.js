@@ -248,13 +248,9 @@ const findPassword = (input, faces) => {
   return 1000 * (pos[1] + 1) + 4 * (pos[0] + 1) + dir;
 };
 
-const doPart1 = findPassword;
-
-const doPart2 = findPassword;
-
 module.exports = {
-  doPart1,
-  doPart2,
+  doPart1: findPassword,
+  doPart2: findPassword,
   RIGHT,
   DOWN,
   LEFT,
