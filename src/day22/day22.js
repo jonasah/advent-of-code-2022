@@ -36,62 +36,70 @@ const findLeftMostPosition = (rowOrColumn) => {
   return rowOrColumn.findIndex((tile) => tile !== EMPTY);
 };
 
-const moveInRowOrColumn = (rowOrColumn, current, steps) => {
-  const wallPosition = rowOrColumn.indexOf(WALL, current);
+const findRightMostPosition = (rowOrColumn) => {
+  return rowOrColumn.findLastIndex((tile) => tile !== EMPTY);
+};
 
+const moveInRowOrColumn = (rowOrColumn, current, steps) => {
+  if (rowOrColumn[current] === WALL) {
+    // wall on edge, wrap back around to right edge
+    return [findRightMostPosition(rowOrColumn), -1];
+  }
+
+  // find wall ahead
   const newPosition = current + steps;
+  const wallPosition = rowOrColumn.indexOf(WALL, current);
 
   if (wallPosition !== -1 && wallPosition <= newPosition) {
     // move to wall
-    return wallPosition - 1;
+    return [wallPosition - 1, -1];
   }
 
-  // no wall
+  // no wall, find edge ahead
+  let edgePosition = rowOrColumn.indexOf(EMPTY, current);
 
-  let maxPosition = rowOrColumn.indexOf(EMPTY, current) - 1;
-
-  if (maxPosition < 0) {
-    maxPosition = rowOrColumn.length - 1;
+  if (edgePosition === -1) {
+    edgePosition = rowOrColumn.length;
   }
 
-  if (newPosition <= maxPosition) {
-    // move steps without wrapping around
-    return newPosition;
-  }
-
-  // wrap around
-  const leftMostPosition = findLeftMostPosition(rowOrColumn);
-
-  if (rowOrColumn[leftMostPosition] === WALL) {
-    // wraps around to wall, stay on the edge
-    return maxPosition;
+  if (newPosition < edgePosition) {
+    // no edge, move steps without wrapping around
+    return [newPosition, -1];
   }
 
   // wrap around to left edge
-  const stepsLeft = newPosition - maxPosition - 1;
-  return moveInRowOrColumn(rowOrColumn, leftMostPosition, stepsLeft);
+  const stepsLeft = newPosition - edgePosition;
+  return [findLeftMostPosition(rowOrColumn), stepsLeft];
 };
 
 const moveRight = (map, pos, steps) => {
   const row = map[pos[1]];
-  return [moveInRowOrColumn(row, pos[0], steps), pos[1]];
+  const [newColumn, stepsLeft] = moveInRowOrColumn(row, pos[0], steps);
+  const newPos = [newColumn, pos[1]];
+  return stepsLeft === -1 ? newPos : moveRight(map, newPos, stepsLeft);
 };
 
 const moveDown = (map, pos, steps) => {
   const column = map.map((row) => row[pos[0]]);
-  return [pos[0], moveInRowOrColumn(column, pos[1], steps)];
+  const [newRow, stepsLeft] = moveInRowOrColumn(column, pos[1], steps);
+  const newPos = [pos[0], newRow];
+  return stepsLeft === -1 ? newPos : moveDown(map, newPos, stepsLeft);
 };
 
 const moveLeft = (map, pos, steps) => {
   const reversedRow = [...map[pos[1]]].reverse();
   const maxIndex = reversedRow.length - 1;
-  return [maxIndex - moveInRowOrColumn(reversedRow, maxIndex - pos[0], steps), pos[1]];
+  const [newColumn, stepsLeft] = moveInRowOrColumn(reversedRow, maxIndex - pos[0], steps);
+  const newPos = [maxIndex - newColumn, pos[1]];
+  return stepsLeft === -1 ? newPos : moveLeft(map, newPos, stepsLeft);
 };
 
 const moveUp = (map, pos, steps) => {
   const reversedColumn = map.map((row) => row[pos[0]]).reverse();
   const maxIndex = reversedColumn.length - 1;
-  return [pos[0], maxIndex - moveInRowOrColumn(reversedColumn, maxIndex - pos[1], steps)];
+  const [newRow, stepsLeft] = moveInRowOrColumn(reversedColumn, maxIndex - pos[1], steps);
+  const newPos = [pos[0], maxIndex - newRow];
+  return stepsLeft === -1 ? newPos : moveUp(map, newPos, stepsLeft);
 };
 
 const rotateLeft = (dir) => (dir === RIGHT ? UP : dir - 1);
@@ -103,7 +111,9 @@ const findPassword = (input) => {
   let pos = [findLeftMostPosition(map[0]), 0];
   let dir = RIGHT;
 
-  path.forEach((action) => {
+  while (path.length > 0) {
+    const action = path.shift();
+
     if (action === 'L') {
       dir = rotateLeft(dir);
     } else if (action === 'R') {
@@ -121,7 +131,7 @@ const findPassword = (input) => {
         pos = moveUp(map, pos, steps);
       }
     }
-  });
+  }
 
   return 1000 * (pos[1] + 1) + 4 * (pos[0] + 1) + dir;
 };
@@ -137,5 +147,4 @@ const doPart2 = (input, faceSize) => {
 module.exports = {
   doPart1,
   doPart2,
-  findNextPosition: moveInRowOrColumn,
 };
