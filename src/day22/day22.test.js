@@ -1,5 +1,14 @@
 const getInput = require('../get-input');
-const { doPart1, doPart2, RIGHT, DOWN, LEFT, UP, wrap } = require('./day22');
+const {
+  doPart1,
+  doPart2,
+  RIGHT,
+  DOWN,
+  LEFT,
+  UP,
+  wrap,
+  moveInRowOrColumn,
+} = require('./day22');
 
 const testInput = `
         ...#
@@ -337,25 +346,65 @@ const faces = [
   ],
 ];
 
-test.each([
-  [RIGHT, [5, 7], 0, RIGHT, [2, 7]],
-  [DOWN, [3, 9], 0, DOWN, [3, 6]],
-  [LEFT, [2, 8], 0, LEFT, [5, 8]],
-  [UP, [4, 6], 0, UP, [4, 9]],
-  [RIGHT, [15, 17], 1, LEFT, [15, 18]],
-  [DOWN, [13, 19], 1, UP, [14, 19]],
-  [LEFT, [12, 18], 1, RIGHT, [12, 17]],
-  // [UP, [14, 16], 1, DOWN, [13, 16]],
-  [RIGHT, [25, 27], 2, UP, [23, 29]],
-  // [DOWN, [23, 29], 2, RIGHT, [22, 28]],
-  [LEFT, [22, 28], 2, DOWN, [24, 26]],
-  // [UP, [24, 26], 2, LEFT, [26, 23]],
-  [RIGHT, [35, 37], 3, DOWN, [34, 36]],
-  [DOWN, [33, 39], 3, LEFT, [32, 38]],
-  // [LEFT, [32, 38], 3, UP, [33, 39]],
-  [UP, [34, 36], 3, RIGHT, [32, 38]],
-])('wrap %p %p %p -> %p %p', (dir, pos, faceNo, expectedDir, expectedPos) => {
-  const [d, p] = wrap(dir, pos, faces[faceNo], faces);
-  expect(d).toBe(expectedDir);
-  expect(p).toEqual(expectedPos);
+describe('wrap', () => {
+  test.each([
+    [RIGHT, [5, 7], 0, RIGHT, [2, 7]],
+    [DOWN, [3, 9], 0, DOWN, [3, 6]],
+    [LEFT, [2, 8], 0, LEFT, [5, 8]],
+    [UP, [4, 6], 0, UP, [4, 9]],
+    [RIGHT, [15, 17], 1, LEFT, [15, 18]],
+    [DOWN, [13, 19], 1, UP, [14, 19]],
+    [LEFT, [12, 18], 1, RIGHT, [12, 17]],
+    // [UP, [14, 16], 1, DOWN, [13, 16]],
+    [RIGHT, [25, 27], 2, UP, [23, 29]],
+    // [DOWN, [23, 29], 2, RIGHT, [22, 28]],
+    [LEFT, [22, 28], 2, DOWN, [24, 26]],
+    // [UP, [24, 26], 2, LEFT, [26, 23]],
+    [RIGHT, [35, 37], 3, DOWN, [34, 36]],
+    [DOWN, [33, 39], 3, LEFT, [32, 38]],
+    // [LEFT, [32, 38], 3, UP, [33, 39]],
+    [UP, [34, 36], 3, RIGHT, [32, 38]],
+  ])('wrap %p %p %p -> %p %p', (dir, pos, faceNo, expectedDir, expectedPos) => {
+    const [d, p] = wrap(dir, pos, faces[faceNo], faces);
+    expect(d).toBe(expectedDir);
+    expect(p).toEqual(expectedPos);
+  });
+});
+
+describe('moveInRowOrColumn', () => {
+  test('move without wrap (before max)', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('.......#'.split(''), 1, 4, 7);
+    expect(pos).toBe(5);
+    expect(stepsLeft).toBe(0);
+  });
+
+  test('move without wrap (at max)', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('........'.split(''), 1, 3, 4);
+    expect(pos).toBe(4);
+    expect(stepsLeft).toBe(0);
+  });
+
+  test('move with wrap', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('........'.split(''), 1, 4, 3);
+    expect(pos).toBe(3);
+    expect(stepsLeft).toBe(2);
+  });
+
+  test('move to wall (before new pos)', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('...#....'.split(''), 1, 4, 7);
+    expect(pos).toBe(2);
+    expect(stepsLeft).toBe(0);
+  });
+
+  test('move to wall (at new pos)', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('.....#..'.split(''), 1, 4, 7);
+    expect(pos).toBe(4);
+    expect(stepsLeft).toBe(0);
+  });
+
+  test('do not go to wall outside of max', () => {
+    const [pos, stepsLeft] = moveInRowOrColumn('......#.'.split(''), 1, 6, 3);
+    expect(pos).toBe(3);
+    expect(stepsLeft).toBe(4);
+  });
 });

@@ -38,9 +38,8 @@ const isWall = (map, pos) => {
   return map[pos[1]][pos[0]] === WALL;
 };
 
-const moveInRowOrColumn = (rowOrColumn, current, steps, edgePosition) => {
-  // find wall ahead
-  const newPosition = current + steps;
+const moveInRowOrColumn = (rowOrColumn, current, steps, maxPosition) => {
+  const newPosition = Math.min(current + steps, maxPosition);
   const wallPosition = rowOrColumn.indexOf(WALL, current);
 
   if (wallPosition !== -1 && wallPosition <= newPosition) {
@@ -48,51 +47,45 @@ const moveInRowOrColumn = (rowOrColumn, current, steps, edgePosition) => {
     return [wallPosition - 1, 0];
   }
 
-  if (newPosition <= edgePosition) {
-    // will not reach edge, move steps without wrapping around
-    return [newPosition, 0];
-  }
-
-  // move to edge
-  const stepsLeft = newPosition - edgePosition;
-  return [edgePosition, stepsLeft];
+  const stepsLeft = steps - (newPosition - current);
+  return [newPosition, stepsLeft];
 };
 
-const moveRight = (map, pos, steps, edgePosition) => {
+const moveRight = (map, pos, steps, maxPosition) => {
   const row = map[pos[1]];
-  const [newColumn, stepsLeft] = moveInRowOrColumn(row, pos[0], steps, edgePosition);
+  const [newColumn, stepsLeft] = moveInRowOrColumn(row, pos[0], steps, maxPosition);
   const newPos = [newColumn, pos[1]];
   return [newPos, stepsLeft];
 };
 
-const moveDown = (map, pos, steps, edgePosition) => {
+const moveDown = (map, pos, steps, maxPosition) => {
   const column = map.map((row) => row[pos[0]]);
-  const [newRow, stepsLeft] = moveInRowOrColumn(column, pos[1], steps, edgePosition);
+  const [newRow, stepsLeft] = moveInRowOrColumn(column, pos[1], steps, maxPosition);
   const newPos = [pos[0], newRow];
   return [newPos, stepsLeft];
 };
 
-const moveLeft = (map, pos, steps, edgePosition) => {
+const moveLeft = (map, pos, steps, maxPosition) => {
   const reversedRow = [...map[pos[1]]].reverse();
   const maxIndex = reversedRow.length - 1;
   const [newColumn, stepsLeft] = moveInRowOrColumn(
     reversedRow,
     maxIndex - pos[0],
     steps,
-    maxIndex - edgePosition
+    maxIndex - maxPosition
   );
   const newPos = [maxIndex - newColumn, pos[1]];
   return [newPos, stepsLeft];
 };
 
-const moveUp = (map, pos, steps, edgePosition) => {
+const moveUp = (map, pos, steps, maxPosition) => {
   const reversedColumn = map.map((row) => row[pos[0]]).reverse();
   const maxIndex = reversedColumn.length - 1;
   const [newRow, stepsLeft] = moveInRowOrColumn(
     reversedColumn,
     maxIndex - pos[1],
     steps,
-    maxIndex - edgePosition
+    maxIndex - maxPosition
   );
   const newPos = [pos[0], maxIndex - newRow];
   return [newPos, stepsLeft];
@@ -107,8 +100,11 @@ const getFace = (faces, face) => {
 
 const getFaceForPosition = (faces, pos) => {
   return faces.find(
-    ([, ul, dr]) =>
-      ul[0] <= pos[0] && pos[0] <= dr[0] && ul[1] <= pos[1] && pos[1] <= dr[1]
+    ([, upperLeft, lowerRight]) =>
+      upperLeft[0] <= pos[0] &&
+      pos[0] <= lowerRight[0] &&
+      upperLeft[1] <= pos[1] &&
+      pos[1] <= lowerRight[1]
   );
 };
 
@@ -140,7 +136,6 @@ const wrap = (dir, pos, face, faces) => {
     }
 
     if (connectingSide === RIGHT) {
-      // throw new Error('');
       return [newDir, [nextUpperLeft[0], nextLowerRight[1] - (pos[0] - upperLeft[0])]];
     }
 
@@ -299,4 +294,5 @@ module.exports = {
   DOWN,
   LEFT,
   UP,
+  moveInRowOrColumn,
 };
