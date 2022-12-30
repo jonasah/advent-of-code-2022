@@ -1,0 +1,69 @@
+swap coords if
+  - connects to same direction (e.g. U -> U)
+  - L -> D, D -> L
+  - R -> U, U -> R
+
+1R -> 6R  !
+1D -> 4U
+1L -> 3U
+1U -> 2U  !
+
+2R -> 3L
+2D -> 5D  !
+2L -> 6D  !
+2U -> 1U  !
+
+3R -> 4L
+3D -> 5L  !
+3L -> 2R
+3U -> 1L
+
+4R -> 6U  !
+4D -> 5U
+4L -> 3R
+4U -> 1D
+
+5R -> 6L
+5D -> 2D  !
+5L -> 3D  !
+5U -> 4D
+
+6R -> 1R  !
+6D -> 2L  !
+6L -> 5R
+6U -> 4R  !
+
+---
+
+1R -> 2L
+1D -> 3U
+1L -> 4L
+1U -> 6L
+
+2R -> 5R
+2D -> 3R
+2L -> 1R
+2U -> 6D
+
+3R -> 2D
+3D -> 5U
+3L -> 4U
+3U -> 1D
+
+4R -> 5L
+4D -> 6U
+4L -> 1L
+4U -> 3L
+
+5R -> 2R
+5D -> 6R
+5L -> 4R
+5U -> 3D
+
+6R -> 5D
+6D -> 2U
+6L -> 1U
+6U -> 4D
+
+180176 too high
+141029 too high
