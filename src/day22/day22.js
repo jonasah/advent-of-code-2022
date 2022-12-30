@@ -1,8 +1,9 @@
 const assert = require('assert');
+const { writeFileSync } = require('fs');
 const getLines = require('../get-lines');
 
 const EMPTY = undefined;
-// const OPEN = '.';
+const OPEN = '.';
 const WALL = '#';
 
 const RIGHT = 0;
@@ -38,10 +39,6 @@ const isWall = (map, pos) => {
 };
 
 const moveInRowOrColumn = (rowOrColumn, current, steps, edgePosition) => {
-  if (edgePosition == null) {
-    throw new Error('no edge');
-  }
-
   // find wall ahead
   const newPosition = current + steps;
   const wallPosition = rowOrColumn.indexOf(WALL, current);
@@ -116,75 +113,74 @@ const getFaceForPosition = (faces, pos) => {
 };
 
 const wrap = (dir, pos, face, faces) => {
-  const [faceNo, ul, dr, links] = face;
+  const [faceNo, upperLeft, lowerRight, links] = face;
   const [nextFaceNo, connectingSide] = links[dir];
-  const nextFace = getFace(faces, nextFaceNo);
-
-  if (!nextFace) {
-    throw new Error(`failed to find next ${nextFaceNo}`);
-  }
-
-  const [, nextUL, nextDR] = nextFace;
-  const wrappedDir = rotateLeft(rotateLeft(connectingSide));
+  const [, nextUpperLeft, nextLowerRight] = getFace(faces, nextFaceNo);
+  const newDir = rotateLeft(rotateLeft(connectingSide));
 
   if (dir === RIGHT) {
     if (connectingSide === DOWN) {
-      return [wrappedDir, [nextUL[0] + pos[1] - ul[1], nextDR[1]]];
+      return [newDir, [nextUpperLeft[0] + pos[1] - upperLeft[1], nextLowerRight[1]]];
     }
 
     if (connectingSide === RIGHT) {
-      return [wrappedDir, [nextDR[0], nextDR[1] - (pos[1] - ul[1])]];
+      return [newDir, [nextLowerRight[0], nextLowerRight[1] - (pos[1] - upperLeft[1])]];
     }
 
     if (connectingSide === UP) {
-      return [wrappedDir, [nextUL[0] + dr[1] - pos[1], nextUL[1]]];
+      return [newDir, [nextUpperLeft[0] + lowerRight[1] - pos[1], nextUpperLeft[1]]];
     }
 
-    return [wrappedDir, [nextUL[0], nextUL[1] + pos[1] - ul[1]]];
+    return [newDir, [nextUpperLeft[0], nextUpperLeft[1] + pos[1] - upperLeft[1]]];
   }
 
   if (dir === DOWN) {
     if (connectingSide === DOWN) {
-      return [wrappedDir, [nextUL[0] + dr[0] - pos[0], nextDR[1]]];
+      return [newDir, [nextUpperLeft[0] + lowerRight[0] - pos[0], nextLowerRight[1]]];
     }
 
     if (connectingSide === RIGHT) {
-      return [wrappedDir, [nextUL[0] + pos[1] - ul[1], nextDR[1]]];
+      // throw new Error('');
+      return [newDir, [nextUpperLeft[0], nextLowerRight[1] - (pos[0] - upperLeft[0])]];
     }
 
     assert(
       connectingSide === UP,
       `2 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
     );
-    return [wrappedDir, [nextUL[0] + pos[0] - ul[0], nextUL[1]]];
+    return [newDir, [nextUpperLeft[0] + pos[0] - upperLeft[0], nextUpperLeft[1]]];
   }
 
   if (dir === LEFT) {
     if (connectingSide === LEFT) {
-      return [wrappedDir, [nextUL[0], nextDR[1] + ul[1] - pos[1]]];
+      return [newDir, [nextUpperLeft[0], nextLowerRight[1] + upperLeft[1] - pos[1]]];
     }
 
     if (connectingSide === UP) {
-      return [wrappedDir, [nextUL[0] + pos[1] - ul[1], nextUL[1]]];
+      return [newDir, [nextUpperLeft[0] + pos[1] - upperLeft[1], nextUpperLeft[1]]];
     }
 
     assert(
       connectingSide === RIGHT,
       `3 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
     );
-    return [wrappedDir, [nextDR[0], nextUL[1] + pos[1] - ul[1]]];
+    return [newDir, [nextLowerRight[0], nextUpperLeft[1] + pos[1] - upperLeft[1]]];
   }
 
   // dir === UP
   if (connectingSide === LEFT) {
-    return [wrappedDir, [nextUL[0], nextUL[1] + pos[0] - ul[0]]];
+    return [newDir, [nextUpperLeft[0], nextUpperLeft[1] + pos[0] - upperLeft[0]]];
   }
 
   assert(
     connectingSide === DOWN,
     `4 translate pos ${faceNo} ${dir} -> ${nextFaceNo} ${connectingSide}`
   );
-  return [wrappedDir, [nextUL[0] + pos[0] - ul[0], nextDR[1]]];
+  return [newDir, [nextUpperLeft[0] + pos[0] - upperLeft[0], nextLowerRight[1]]];
+};
+
+const printMap = (map) => {
+  return map.map((row) => row.map((t) => (t === EMPTY ? ' ' : t)).join('')).join('\n');
 };
 
 const findPassword = (input, faces) => {
@@ -192,9 +188,25 @@ const findPassword = (input, faces) => {
 
   let [, pos] = getFace(faces, 1);
   let dir = RIGHT;
+  let prevPos = pos;
+
+  const dirMap = {
+    [RIGHT]: 'R',
+    [DOWN]: 'D',
+    [LEFT]: 'L',
+    [UP]: 'U',
+  };
+
+  const arrows = {
+    [RIGHT]: '>',
+    [DOWN]: 'v',
+    [LEFT]: '<',
+    [UP]: '^',
+  };
 
   let n = 0;
   const hist = [];
+  hist.push([n, 0, dirMap[dir], ...pos, 0]);
 
   while (path.length > 0) {
     n += 1;
@@ -209,39 +221,60 @@ const findPassword = (input, faces) => {
       let stepsLeft = 0;
 
       const face = getFaceForPosition(faces, pos);
-      const [, ul, dr] = face;
+      const [faceNo, upperLeft, lowerRight] = face;
 
       if (dir === RIGHT) {
-        [pos, stepsLeft] = moveRight(map, pos, steps, dr[0]);
+        [pos, stepsLeft] = moveRight(map, pos, steps, lowerRight[0]);
       } else if (dir === DOWN) {
-        [pos, stepsLeft] = moveDown(map, pos, steps, dr[1]);
+        [pos, stepsLeft] = moveDown(map, pos, steps, lowerRight[1]);
       } else if (dir === LEFT) {
-        [pos, stepsLeft] = moveLeft(map, pos, steps, ul[0]);
+        [pos, stepsLeft] = moveLeft(map, pos, steps, upperLeft[0]);
       } else {
-        [pos, stepsLeft] = moveUp(map, pos, steps, ul[1]);
+        [pos, stepsLeft] = moveUp(map, pos, steps, upperLeft[1]);
       }
 
-      if (stepsLeft > 0) {
-        const [wrappedDir, wrappedPos] = wrap(dir, pos, face, faces);
-
-        if (!isWall(map, wrappedPos)) {
-          dir = wrappedDir;
-          pos = wrappedPos;
-
-          if (stepsLeft > 1) {
-            path.unshift(stepsLeft - 1);
-          }
+      for (
+        let col = Math.min(prevPos[0], pos[0]);
+        col <= Math.max(prevPos[0], pos[0]);
+        ++col
+      ) {
+        for (
+          let row = Math.min(prevPos[1], pos[1]);
+          row <= Math.max(prevPos[1], pos[1]);
+          ++row
+        ) {
+          map[row][col] = arrows[dir];
         }
       }
 
-      // hist.push(pos);
+      if (stepsLeft > 0) {
+        if (
+          !(
+            pos[0] === upperLeft[0] ||
+            pos[0] === lowerRight[0] ||
+            pos[1] === upperLeft[1] ||
+            pos[1] === lowerRight[1]
+          )
+        ) {
+          throw new Error(`not on edge ${pos} ${upperLeft} ${lowerRight}`);
+        }
+
+        const [newDir, newPos] = wrap(dir, pos, face, faces);
+
+        if (!isWall(map, newPos)) {
+          dir = newDir;
+          pos = newPos;
+          path.unshift(stepsLeft - 1);
+        }
+      }
+
+      hist.push([n, steps, dirMap[dir], ...pos, faceNo]);
+
+      prevPos = pos;
     }
 
-    if (Number.isNaN(pos[0]) || Number.isNaN(pos[1])) {
-      throw new Error(`nan ${hist.slice(-2, -1)} ${pos} ${action} ${dir}`);
-    }
-    if (map[pos[1]][pos[0]] === EMPTY || isWall(map, pos)) {
-      throw new Error(`OOB ${hist.slice(-2, -1)} ${pos} ${n} ${action} ${dir}`);
+    if (map[pos[1]][pos[0]] === EMPTY || map[pos[1]][pos[0]] === WALL) {
+      throw new Error(`OOB ${n} ${hist.at(-2)} ${pos} ${action} ${dir}`);
     }
 
     if (n === 53) {
@@ -251,6 +284,9 @@ const findPassword = (input, faces) => {
 
   // console.log(hist);
 
+  writeFileSync('history.log', hist.map((x) => x.join(',')).join('\n'));
+  writeFileSync('map.log', printMap(map));
+
   console.log(pos);
   return 1000 * (pos[1] + 1) + 4 * (pos[0] + 1) + dir;
 };
@@ -258,6 +294,7 @@ const findPassword = (input, faces) => {
 module.exports = {
   doPart1: findPassword,
   doPart2: findPassword,
+  wrap,
   RIGHT,
   DOWN,
   LEFT,
